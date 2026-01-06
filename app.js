@@ -1,5 +1,5 @@
 // ============================================
-// ОСНОВНАЯ ЛОГИКА AR-ОТКРЫТОК
+// AR-ОТКРЫТКИ - ОТЛАДОЧНАЯ ВЕРСИЯ
 // ============================================
 
 let currentCard = null;
@@ -8,47 +8,90 @@ let videoElement = null;
 let isSoundEnabled = false;
 let isTracking = false;
 
+// Функция для показа отладочных сообщений НА ЭКРАНЕ
+function showDebug(message, isError = false) {
+    console.log(message);
+    
+    const debugDiv = document.getElementById('debug-messages') || createDebugDiv();
+    const msg = document.createElement('div');
+    msg.style.cssText = `
+        padding: 8px;
+        margin: 4px 0;
+        background: ${isError ? '#ff4444' : '#44ff44'};
+        color: black;
+        border-radius: 4px;
+        font-size: 12px;
+    `;
+    msg.textContent = new Date().toLocaleTimeString() + ': ' + message;
+    debugDiv.appendChild(msg);
+    
+    // Автоскролл вниз
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    
+    // Убираем старые сообщения (оставляем последние 10)
+    while (debugDiv.children.length > 10) {
+        debugDiv.removeChild(debugDiv.firstChild);
+    }
+}
+
+function createDebugDiv() {
+    const div = document.createElement('div');
+    div.id = 'debug-messages';
+    div.style.cssText = `
+        position: fixed;
+        top: 80px;
+        left: 10px;
+        right: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.8);
+        padding: 10px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-family: monospace;
+    `;
+    document.body.appendChild(div);
+    return div;
+}
+
 // ============================================
-// ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+// ИНИЦИАЛИЗАЦИЯ
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Получаем ID открытки из URL
+    showDebug('📱 Приложение загружено');
+    
     const urlParams = new URLSearchParams(window.location.search);
     const cardId = urlParams.get('id');
     
-    // Если ID не указан - показываем экран выбора
     if (!cardId) {
+        showDebug('❌ ID открытки не указан', true);
         showCardSelection();
         return;
     }
     
-    // Проверяем существование открытки
     if (!CARDS[cardId]) {
+        showDebug(`❌ Открытка "${cardId}" не найдена`, true);
         showError(`Открытка "${cardId}" не найдена`);
         return;
     }
     
     currentCard = CARDS[cardId];
+    showDebug(`✅ Открытка: ${currentCard.title}`);
     
-    // Показываем название на стартовом экране
     document.getElementById('card-title').textContent = currentCard.title;
     
-    // Инициализируем элементы
     arScene = document.getElementById('ar-scene');
     videoElement = document.getElementById('ar-video');
     
-    // Кнопка "Запустить"
     document.getElementById('start-button').addEventListener('click', startARExperience);
-    
-    // Кнопка повтора при ошибке камеры
     document.getElementById('retry-camera').addEventListener('click', startARExperience);
-    
-    // Кнопка переключения звука
     document.getElementById('toggle-sound').addEventListener('click', toggleSound);
+    
+    showDebug('✅ Обработчики событий установлены');
 });
 
 // ============================================
-// ПОКАЗАТЬ ЭКРАН ВЫБОРА ОТКРЫТКИ
+// ПОКАЗАТЬ ЭКРАН ВЫБОРА
 // ============================================
 function showCardSelection() {
     document.getElementById('start-screen').classList.add('hidden');
@@ -70,122 +113,95 @@ function showCardSelection() {
 }
 
 // ============================================
-// ЗАПУСК AR-ОПЫТА
+// ЗАПУСК AR
 // ============================================
 async function startARExperience() {
+    showDebug('🚀 Запуск AR...');
+    
     const startScreen = document.getElementById('start-screen');
     const cameraError = document.getElementById('camera-error');
     
     try {
-        // 1. Устанавливаем пути к ресурсам
+        // 1. Устанавливаем пути
+        showDebug(`📁 mind: ${currentCard.mindUrl}`);
+        showDebug(`🎬 video: ${currentCard.videoUrl}`);
+        
         arScene.setAttribute('mindar-image', `imageTargetSrc: ${currentCard.mindUrl}; autoStart: false;`);
         videoElement.src = currentCard.videoUrl;
-        
-        // 2. Просто загружаем видео без ожидания
         videoElement.load();
-        console.log('Видео начало загружаться');
         
-        // 3. Сразу скрываем стартовый экран и показываем AR
+        showDebug('✅ Ресурсы установлены');
+        
+        // 2. Скрываем стартовый экран
         startScreen.classList.add('hidden');
         arScene.classList.remove('hidden');
         
-        // 4. Показываем подсказку и управление звуком
+        showDebug('✅ Интерфейс переключён');
+        
+        // 3. Показываем элементы
         document.getElementById('tracking-hint').classList.remove('hidden');
         document.getElementById('sound-control').classList.remove('hidden');
         
-        // 5. Запрашиваем камеру и запускаем AR
+        // 4. Запускаем AR
+        showDebug('📷 Запрос камеры...');
         await requestCameraAndStartAR();
         
-        // 6. Настраиваем отслеживание триггера
+        showDebug('✅ AR запущен!');
+        
+        // 5. Настраиваем отслеживание
         setupTracking();
         
     } catch (error) {
-        console.error('Ошибка запуска AR:', error);
+        showDebug(`❌ ОШИБКА: ${error.message}`, true);
+        console.error('Полная ошибка:', error);
         
-        // Проверяем тип ошибки
         if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-            // Ошибка доступа к камере
             startScreen.classList.add('hidden');
             cameraError.classList.remove('hidden');
         } else {
-            // Другая ошибка
             showError(`Ошибка: ${error.message}`);
         }
     }
 }
 
 // ============================================
-// ПРЕДЗАГРУЗКА ВИДЕО
-// ============================================
-function preloadVideo() {
-    return new Promise((resolve, reject) => {
-        // Если видео уже имеет данные - сразу резолвим
-        if (videoElement.readyState >= 2) {
-            console.log('Видео уже загружено');
-            resolve();
-            return;
-        }
-        
-        const onLoaded = () => {
-            console.log('Видео загружено, readyState:', videoElement.readyState);
-            cleanup();
-            resolve();
-        };
-        
-        const onError = (e) => {
-            console.error('Ошибка загрузки видео:', e);
-            cleanup();
-            reject(new Error('Ошибка загрузки видео'));
-        };
-        
-        const onTimeout = () => {
-            console.error('Таймаут загрузки видео');
-            cleanup();
-            reject(new Error('Таймаут загрузки видео'));
-        };
-        
-        const cleanup = () => {
-            videoElement.removeEventListener('loadeddata', onLoaded);
-            videoElement.removeEventListener('canplay', onLoaded);
-            videoElement.removeEventListener('error', onError);
-            clearTimeout(timeoutId);
-        };
-        
-        videoElement.addEventListener('loadeddata', onLoaded);
-        videoElement.addEventListener('canplay', onLoaded);
-        videoElement.addEventListener('error', onError);
-        
-        const timeoutId = setTimeout(onTimeout, 120000); // 2 минуты
-        
-        videoElement.load();
-    });
-}
-
-// ============================================
-// ЗАПРОС КАМЕРЫ И ЗАПУСК AR
+// ЗАПРОС КАМЕРЫ
 // ============================================
 async function requestCameraAndStartAR() {
     return new Promise((resolve, reject) => {
+        showDebug('⏳ Ждём инициализацию MindAR...');
+        
         const sceneEl = arScene;
         
-        // Слушаем события A-Frame
         sceneEl.addEventListener('arReady', () => {
-            console.log('AR готов');
+            showDebug('✅ AR готов!');
             resolve();
         }, { once: true });
         
         sceneEl.addEventListener('arError', (event) => {
-            console.error('AR ошибка:', event.detail);
+            showDebug(`❌ AR ошибка: ${JSON.stringify(event.detail)}`, true);
             reject(event.detail);
         }, { once: true });
         
-        // Ждём, пока система MindAR загрузится
+        // Проверяем систему MindAR
+        let attempts = 0;
+        const maxAttempts = 50; // 5 секунд
+        
         const checkSystem = () => {
+            attempts++;
+            showDebug(`🔍 Попытка ${attempts}/${maxAttempts}`);
+            
             if (sceneEl.systems && sceneEl.systems['mindar-image-system']) {
+                showDebug('✅ Система MindAR найдена!');
                 const mindAR = sceneEl.systems['mindar-image-system'];
+                
+                showDebug('🎥 Запуск камеры...');
                 mindAR.start();
+                
+            } else if (attempts >= maxAttempts) {
+                showDebug('❌ MindAR не загрузился за 5 секунд', true);
+                reject(new Error('MindAR timeout'));
             } else {
-                // Повторяем через 100мс если система ещё не готова
                 setTimeout(checkSystem, 100);
             }
         };
@@ -195,36 +211,35 @@ async function requestCameraAndStartAR() {
 }
 
 // ============================================
-// НАСТРОЙКА ОТСЛЕЖИВАНИЯ ТРИГГЕРА
+// НАСТРОЙКА ОТСЛЕЖИВАНИЯ
 // ============================================
 function setupTracking() {
+    showDebug('🎯 Настройка трекинга...');
+    
     const targetEntity = document.getElementById('target-entity');
     
-    // Когда триггер найден
     targetEntity.addEventListener('targetFound', () => {
-        console.log('Триггер найден');
+        showDebug('🎯 ТРИГГЕР НАЙДЕН!');
         isTracking = true;
         
-        // Скрываем подсказку
         document.getElementById('tracking-hint').classList.add('hidden');
         
-        // Запускаем видео (без звука сначала, чтобы обойти автоплей)
-        videoElement.play().catch(err => {
-            console.error('Ошибка воспроизведения:', err);
+        videoElement.play().then(() => {
+            showDebug('▶️ Видео играет!');
+        }).catch(err => {
+            showDebug(`❌ Видео ошибка: ${err.message}`, true);
         });
     });
     
-    // Когда триггер потерян
     targetEntity.addEventListener('targetLost', () => {
-        console.log('Триггер потерян');
+        showDebug('❌ Триггер потерян');
         isTracking = false;
         
-        // Показываем подсказку
         document.getElementById('tracking-hint').classList.remove('hidden');
-        
-        // Ставим видео на паузу
         videoElement.pause();
     });
+    
+    showDebug('✅ Трекинг настроен');
 }
 
 // ============================================
@@ -234,21 +249,18 @@ function toggleSound() {
     const btn = document.getElementById('toggle-sound');
     
     if (isSoundEnabled) {
-        // Выключаем звук
         videoElement.muted = true;
         btn.textContent = '🔇 Звук ВЫКЛ';
         isSoundEnabled = false;
+        showDebug('🔇 Звук выключен');
     } else {
-        // Включаем звук
         videoElement.muted = false;
         btn.textContent = '🔊 Звук ВКЛ';
         isSoundEnabled = true;
+        showDebug('🔊 Звук включен');
         
-        // Если видео не играет - запускаем
         if (isTracking && videoElement.paused) {
-            videoElement.play().catch(err => {
-                console.error('Ошибка воспроизведения со звуком:', err);
-            });
+            videoElement.play();
         }
     }
 }
