@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест AR-открыток</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        
+        .status {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-ok {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            color: #f87171;
+            font-weight: bold;
+        }
+        
+        .cards-list {
+            margin-top: 30px;
+        }
+        
+        .card-item {
+            background: rgba(255,255,255,0.9);
+            color: #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .card-item h3 {
+            margin-bottom: 10px;
+        }
+        
+        .card-item p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .warning {
+            background: rgba(251, 191, 36, 0.2);
+            border-left: 4px solid #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info {
+            background: rgba(96, 165, 250, 0.2);
+            border-left: 4px solid #60a5fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование AR-открыток</h1>
+        
+        <div class="status">
+            <h2>Статус файлов:</h2>
+            <div class="status-item">
+                <span>index.html</span>
+                <span id="status-index" class="status-error">Проверка...</span>
+            </div>
+            <div class="status-item">
+                <span>config.js</span>
+                <span id="status-config" class="status-error">Проверка...</span>
+            </div>
+            <div class="status-item">
+                <span>app.js</span>
+                <span id="status-app" class="status-error">Проверка...</span>
+            </div>
+            <div class="status-item">
+                <span>style.css</span>
+                <span id="status-style" class="status-error">Проверка...</span>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Важно!</strong><br>
+            Камера НЕ работает через <code>file://</code> протокол!<br>
+            Запусти локальный сервер: <code>python -m http.server 8000</code>
+        </div>
+
+        <div class="info">
+            <strong>ℹ️ Как протестировать:</strong><br>
+            1. Открой консоль браузера (F12)<br>
+            2. Кликни "Открыть тест" ниже<br>
+            3. Если нет камеры - будет ошибка (это нормально)<br>
+            4. Проверь, что стартовый экран загружается
+        </div>
+
+        <div class="cards-list" id="cards-list">
+            <h2>Доступные открытки:</h2>
+        </div>
+    </div>
+
+    <script src="./config.js"></script>
+    <script>
+        // Проверка наличия файлов
+        async function checkFile(filename, statusId) {
+            try {
+                const response = await fetch(`./${filename}`, { method: 'HEAD' });
+                const statusEl = document.getElementById(statusId);
+                if (response.ok) {
+                    statusEl.textContent = '✓ OK';
+                    statusEl.className = 'status-ok';
+                } else {
+                    statusEl.textContent = '✗ Не найден';
+                    statusEl.className = 'status-error';
+                }
+            } catch (error) {
+                document.getElementById(statusId).textContent = '✗ Ошибка';
+                document.getElementById(statusId).className = 'status-error';
+            }
+        }
+
+        // Проверяем все файлы
+        checkFile('index.html', 'status-index');
+        checkFile('config.js', 'status-config');
+        checkFile('app.js', 'status-app');
+        checkFile('style.css', 'status-style');
+
+        // Отображаем список открыток из конфига
+        const cardsList = document.getElementById('cards-list');
+        
+        if (typeof CARDS !== 'undefined') {
+            Object.keys(CARDS).forEach(cardId => {
+                const card = CARDS[cardId];
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card-item';
+                cardDiv.innerHTML = `
+                    <h3>${card.title}</h3>
+                    <p><strong>ID:</strong> <code>${cardId}</code></p>
+                    <p><strong>Триггер:</strong> ${card.mindUrl}</p>
+                    <p><strong>Видео:</strong> ${card.videoUrl}</p>
+                    <p><strong>URL:</strong> <code>?id=${cardId}</code></p>
+                    <a href="./?id=${cardId}" class="btn" target="_blank">Открыть тест</a>
+                `;
+                cardsList.appendChild(cardDiv);
+            });
+        } else {
+            cardsList.innerHTML += '<p style="color: #f87171;">⚠️ config.js не загружен!</p>';
+        }
+    </script>
+</body>
+</html>

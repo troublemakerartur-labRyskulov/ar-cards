@@ -1,0 +1,294 @@
+/* ============================================
+   ОСНОВНЫЕ СТИЛИ
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    overflow: hidden;
+    background: #000;
+}
+
+/* ============================================
+   OVERLAY ЭКРАНЫ
+   ============================================ */
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.overlay-content {
+    text-align: center;
+    color: white;
+    max-width: 500px;
+    width: 100%;
+}
+
+.overlay h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.overlay h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.overlay p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+#card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+}
+
+.instruction {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* ============================================
+   КНОПКИ
+   ============================================ */
+
+.btn-primary {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-card {
+    background: rgba(255,255,255,0.9);
+    color: #667eea;
+    border: none;
+    padding: 20px 30px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    margin: 10px;
+    min-width: 250px;
+    transition: all 0.3s ease;
+    display: block;
+    width: 100%;
+}
+
+.btn-card:hover {
+    background: white;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   ЛОАДЕР
+   ============================================ */
+
+.loader {
+    margin-top: 2rem;
+}
+
+.spinner {
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   ИНСТРУКЦИИ
+   ============================================ */
+
+.instruction-box {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.instruction-box p {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.instruction-box strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   ПОДСКАЗКА ОТСЛЕЖИВАНИЯ
+   ============================================ */
+
+.tracking-hint {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(102, 126, 234, 0.95);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.05);
+    }
+}
+
+/* ============================================
+   УПРАВЛЕНИЕ ЗВУКОМ
+   ============================================ */
+
+.sound-control {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.btn-sound {
+    background: rgba(255,255,255,0.95);
+    color: #667eea;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-sound:hover {
+    background: white;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   СПИСОК ОТКРЫТОК
+   ============================================ */
+
+#cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 2rem;
+}
+
+/* ============================================
+   ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ
+   ============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+/* ============================================
+   A-FRAME СЦЕНА
+   ============================================ */
+
+#ar-scene {
+    width: 100%;
+    height: 100vh;
+}
+
+/* ============================================
+   АДАПТИВНОСТЬ
+   ============================================ */
+
+@media (max-width: 600px) {
+    .overlay h1 {
+        font-size: 2rem;
+    }
+    
+    #card-title {
+        font-size: 1.3rem;
+    }
+    
+    .btn-primary {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+    }
+    
+    .btn-card {
+        font-size: 1.1rem;
+        min-width: 200px;
+    }
+    
+    .tracking-hint {
+        font-size: 0.95rem;
+        padding: 12px 20px;
+    }
+}
+
+/* ============================================
+   iOS СПЕЦИФИЧНЫЕ СТИЛИ
+   ============================================ */
+
+/* Убираем масштабирование на iOS */
+input, button, select, textarea {
+    font-size: 16px;
+}
+
+/* Убираем подсветку при тапе */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
