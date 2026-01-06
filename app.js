@@ -185,11 +185,15 @@ async function requestCameraAndStartAR() {
         
         // Проверяем систему MindAR
         let attempts = 0;
-        const maxAttempts = 50; // 5 секунд
+        const maxAttempts = 300; // 30 секунд (было 5)
         
         const checkSystem = () => {
             attempts++;
-            showDebug(`🔍 Попытка ${attempts}/${maxAttempts}`);
+            
+            // Показываем только каждую 10-ю попытку чтобы не спамить
+            if (attempts % 10 === 0) {
+                showDebug(`🔍 Попытка ${attempts}/${maxAttempts} (${attempts/10} сек)`);
+            }
             
             if (sceneEl.systems && sceneEl.systems['mindar-image-system']) {
                 showDebug('✅ Система MindAR найдена!');
@@ -199,7 +203,7 @@ async function requestCameraAndStartAR() {
                 mindAR.start();
                 
             } else if (attempts >= maxAttempts) {
-                showDebug('❌ MindAR не загрузился за 5 секунд', true);
+                showDebug('❌ MindAR не загрузился за 30 секунд', true);
                 reject(new Error('MindAR timeout'));
             } else {
                 setTimeout(checkSystem, 100);
