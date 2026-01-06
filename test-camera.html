@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест камеры</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        #status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .status-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #video-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Тест камеры iPhone</h1>
+        <p>Проверим, работает ли камера в Safari</p>
+        
+        <div id="status">
+            <div class="status-item">Нажмите "Запустить камеру"</div>
+        </div>
+        
+        <button id="start-btn" onclick="startCamera()">Запустить камеру</button>
+        <button id="stop-btn" onclick="stopCamera()" style="display: none;">Остановить</button>
+        
+        <div id="video-container">
+            <video id="video" autoplay playsinline></video>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        const video = document.getElementById('video');
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const videoContainer = document.getElementById('video-container');
+        
+        function addStatus(message, isError = false) {
+            const time = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'status-item ' + (isError ? 'error' : 'success');
+            item.textContent = `${time}: ${message}`;
+            statusDiv.appendChild(item);
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        async function startCamera() {
+            try {
+                addStatus('🚀 Начинаем запуск камеры...');
+                startBtn.disabled = true;
+                
+                // Проверяем поддержку API
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('getUserMedia не поддерживается');
+                }
+                addStatus('✅ API поддерживается');
+                
+                // Запрашиваем камеру
+                addStatus('📷 Запрашиваем доступ к камере...');
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment', // задняя камера
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                addStatus('✅ Доступ к камере получен!');
+                
+                // Подключаем поток к видео
+                video.srcObject = stream;
+                addStatus('✅ Поток подключён к видео');
+                
+                // Показываем видео
+                videoContainer.style.display = 'block';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                
+                addStatus('🎉 КАМЕРА РАБОТАЕТ!');
+                
+                // Информация о треке
+                const videoTrack = stream.getVideoTracks()[0];
+                const settings = videoTrack.getSettings();
+                addStatus(`📐 Разрешение: ${settings.width}x${settings.height}`);
+                addStatus(`📱 Камера: ${videoTrack.label}`);
+                
+            } catch (error) {
+                addStatus(`❌ ОШИБКА: ${error.name}`, true);
+                addStatus(`❌ Сообщение: ${error.message}`, true);
+                
+                if (error.name === 'NotAllowedError') {
+                    addStatus('⚠️ Вы отклонили доступ к камере', true);
+                    addStatus('💡 Настройки → Safari → Камера → Разрешить', true);
+                } else if (error.name === 'NotFoundError') {
+                    addStatus('⚠️ Камера не найдена', true);
+                } else if (error.name === 'NotReadableError') {
+                    addStatus('⚠️ Камера используется другим приложением', true);
+                }
+                
+                startBtn.disabled = false;
+            }
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+                
+                videoContainer.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                startBtn.disabled = false;
+                stopBtn.style.display = 'none';
+                
+                addStatus('⏹️ Камера остановлена');
+            }
+        }
+    </script>
+</body>
+</html>
